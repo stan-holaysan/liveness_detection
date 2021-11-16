@@ -12,30 +12,34 @@ import pickle
 import time
 import cv2
 import os
+import tensorflow as tf
+# device_name = tf.test.gpu_device_name()
+# # if device_name != '/device:GPU:0':
+# #   raise SystemError('GPU device not found')
+# print('Found GPU at: {}'.format(device_name))
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-m", "--model", type=str, required=True,
-	help="path to trained model")
-ap.add_argument("-l", "--le", type=str, required=True,
-	help="path to label encoder")
-ap.add_argument("-d", "--detector", type=str, required=True,
-	help="path to OpenCV's deep learning face detector")
+# ap.add_argument("-m", "--model", type=str, required=True,
+# 	help="path to trained model")
+# ap.add_argument("-l", "--le", type=str, required=True,
+# 	help="path to label encoder")
+# ap.add_argument("-d", "--detector", type=str, required=True,
+# 	help="path to OpenCV's deep learning face detector")
 ap.add_argument("-c", "--confidence", type=float, default=0.5,
 	help="minimum probability to filter weak detections")
 args = vars(ap.parse_args())
 
 # load our serialized face detector from disk
 print("[INFO] loading face detector...")
-protoPath = os.path.sep.join([args["detector"], "deploy.prototxt"])
-modelPath = os.path.sep.join([args["detector"],
-	"res10_300x300_ssd_iter_140000.caffemodel"])
+protoPath = 'face_detector/deploy.prototxt'
+modelPath = 'face_detector/res10_300x300_ssd_iter_140000.caffemodel'
 net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
 # load the liveness detector model and label encoder from disk
 print("[INFO] loading liveness detector...")
-model = load_model("model.h5")
-le = pickle.loads(open(args["le"], "rb").read())
+model = load_model("grayModel.h5")
+le = pickle.loads(open('le.pickle', "rb").read())
 
 # initialize the video stream and allow the camera sensor to warmup
 print("[INFO] starting video stream...")
@@ -48,7 +52,6 @@ while True:
 	# to have a maximum width of 600 pixels
 	frame = vs.read()
 	frame = imutils.resize(frame, width=600)
-
 	# grab the frame dimensions and convert it to a blob
 	(h, w) = frame.shape[:2]
 	blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0,
@@ -82,6 +85,7 @@ while True:
 			# extract the face ROI and then preproces it in the exact
 			# same manner as our training data
 			face = frame[startY:endY, startX:endX]
+			face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
 			face = cv2.resize(face, (32, 32))
 			face = face.astype("float") / 255.0
 			face = img_to_array(face)

@@ -13,6 +13,7 @@ from sklearn.metrics import classification_report
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.optimizers import Adam
 from tensorflow.python.keras.utils import to_categorical
+from tensorflow.python import keras
 from imutils import paths
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,7 +38,7 @@ args = vars(ap.parse_args())
 # epochs to train for
 INIT_LR = 1e-4
 BS = 8
-EPOCHS = 60
+EPOCHS = 30
 
 # grab the list of images in our dataset directory, then initialize
 # the list of data (i.e., images) and class images
@@ -52,6 +53,7 @@ for imagePath in imagePaths:
 	# resize it to be a fixed 32x32 pixels, ignoring aspect ratio
 	label = imagePath.split(os.path.sep)[-2]
 	image = cv2.imread(imagePath)
+	image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	image = cv2.resize(image, (32, 32))
 
 	# update the data and labels lists, respectively
@@ -81,26 +83,27 @@ aug = ImageDataGenerator(rotation_range=20, zoom_range=0.15,
 # initialize the optimizer and model
 print("[INFO] compiling model...")
 opt = Adam(lr=INIT_LR, decay=INIT_LR / EPOCHS)
-model = LivenessNet.build(width=32, height=32, depth=3,
-	classes=len(le.classes_))
+# model = LivenessNet.build(width=32, height=32, depth=1,
+# 	classes=len(le.classes_))
+model = keras.models.load_model('grayModel.h5')
 model.compile(loss="binary_crossentropy", optimizer=opt,
 	metrics=["accuracy"])
 
 # train the network
 print("[INFO] training network for {} epochs...".format(EPOCHS))
-H = model.fit(x=aug.flow(trainX, trainY, batch_size=BS),
-	validation_data=(testX, testY), steps_per_epoch=len(trainX) // BS,
+H = model.fit(x=aug.flow(trainX.reshape(28507, 32, 32, 1), trainY, batch_size=BS),
+	validation_data=(testX.reshape(9503, 32, 32, 1), testY), steps_per_epoch=len(trainX) // BS,
 	epochs=EPOCHS)
-
-# evaluate the network
-print("[INFO] evaluating network...")
-predictions = model.predict(x=testX, batch_size=BS)
-print(classification_report(testY.argmax(axis=1),
-	predictions.argmax(axis=1), target_names=le.classes_))
 
 # save the network to disk
 print("[INFO] serializing network to '{}'...".format(args["model"]))
-model.save("model.h5")
+model.save("grayModel.h5")
+
+# evaluate the network
+print("[INFO] evaluating network...")
+predictions = model.predict(x=testX.reshape(9503, 32, 32, 1), batch_size=BS)
+print(classification_report(testY.argmax(axis=1),
+	predictions.argmax(axis=1), target_names=le.classes_))
 
 # save the label encoder to disk
 f = open(args["le"], "wb")
