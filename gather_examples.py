@@ -33,7 +33,7 @@ net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 # number of frames read and saved thus far
 vs = cv2.VideoCapture(args["input"])
 read = 0
-saved = 558
+saved = 16644
 
 # loop over frames from the video file stream
 while True:
@@ -78,7 +78,6 @@ while True:
 			box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
 			(startX, startY, endX, endY) = box.astype("int")
 			face = frame[startY:endY, startX:endX]
-
 			# write the frame to disk
 			p = os.path.sep.join([args["output"],
 				"{}.png".format(saved)])

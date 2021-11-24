@@ -38,7 +38,7 @@ net = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
 # load the liveness detector model and label encoder from disk
 print("[INFO] loading liveness detector...")
-model = load_model("claheModel.h5")
+model = load_model("bestClaheModel.h5")
 le = pickle.loads(open('le.pickle', "rb").read())
 
 # initialize the video stream and allow the camera sensor to warmup
