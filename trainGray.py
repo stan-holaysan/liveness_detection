@@ -94,7 +94,7 @@ model.compile(loss="sparse_categorical_crossentropy", optimizer=opt,
 	metrics=["accuracy"])
 
 # Use stratified K folds cross validation on data set
-skf = StratifiedKFold(n_splits=10)
+skf = StratifiedKFold(n_splits=10, shuffle=True)
 skf.get_n_splits(data, labels)
 for train_index, test_index in skf.split(data, labels):
 	trainX, trainY = data[train_index], labels[train_index]
