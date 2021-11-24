@@ -104,7 +104,7 @@ for train_index, test_index in skf.split(data, labels):
 	# callback = callbacks.EarlyStopping(patience=7, restore_best_weights=True)
 	print("[INFO] training network for {} epochs...".format(EPOCHS))
 	H = model.fit(x=aug.flow(trainX, trainY, batch_size=BS),
-		validation_data=(testX, testY), steps_per_epoch=(len(trainX) // BS) - 3500,
+		validation_data=(testX, testY), steps_per_epoch=len(trainX) // BS,
 		epochs=EPOCHS)
 
 	# save the network to disk
